@@ -21,9 +21,15 @@ namespace Tilr.Tray
         private List<Button> cells = new List<Button>();
         private IntPtr targetWindow;
 
+        KeyboardHook hook = new KeyboardHook();
+
         public TilrMainForm()
         {
             InitializeComponent();
+
+            hook.KeyPressed += new EventHandler<KeyPressedEventArgs>(hook_KeyPressed);
+            hook.RegisterHotKey(Tray.ModifierKeys.Control | Tray.ModifierKeys.Alt, Keys.Space);
+
             trayContextOpen.Click += new System.EventHandler(this.trayContextOpen_Click);
             trayContextExit.Click += new System.EventHandler(this.trayContextExit_Click);
 
@@ -58,6 +64,11 @@ namespace Tilr.Tray
                     cells.Add(b);
                 }
             }
+        }
+
+        void hook_KeyPressed(object sender, KeyPressedEventArgs e)
+        {
+            Debug.WriteLine("Hotkey was pressed");
         }
 
         private void btnGridCell_Click(object sender, EventArgs e)
