@@ -48,7 +48,6 @@
             this.trayIcon.Visible = true;
             this.trayIcon.Click += new System.EventHandler(this.trayIcon_Click);
             this.trayIcon.MouseClick += new System.Windows.Forms.MouseEventHandler(this.trayIcon_MouseClick);
-            this.trayIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.trayIcon_MouseDoubleClick);
             // 
             // trayContextMenu
             // 
@@ -123,7 +122,6 @@
             this.Name = "TilrMainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Tilr";
-            this.Load += new System.EventHandler(this.TilrMainForm_Load);
             this.SizeChanged += new System.EventHandler(this.TilrMainForm_SizeChanged);
             this.trayContextMenu.ResumeLayout(false);
             this.ResumeLayout(false);

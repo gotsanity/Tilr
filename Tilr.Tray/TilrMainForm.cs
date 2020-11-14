@@ -27,6 +27,11 @@ namespace Tilr.Tray
         {
             InitializeComponent();
 
+            this.WindowState = FormWindowState.Minimized;
+            this.ShowInTaskbar = false;
+            trayIcon.Visible = true;
+            trayContextMenu.Enabled = true;
+
             hook.KeyPressed += new EventHandler<KeyPressedEventArgs>(hook_KeyPressed);
             hook.RegisterHotKey(Tray.ModifierKeys.Control | Tray.ModifierKeys.Alt, Keys.Space);
 
@@ -68,7 +73,9 @@ namespace Tilr.Tray
 
         void hook_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            Debug.WriteLine("Hotkey was pressed");
+            Debug.WriteLine(string.Format("Hotkey was pressed from {0}", GetActiveWindowTitle()));
+            SetWindowSelection(GetActiveWindowTitle());
+            openTilrForm();
         }
 
         private void btnGridCell_Click(object sender, EventArgs e)
@@ -77,6 +84,12 @@ namespace Tilr.Tray
 
             if (b == null)
             {
+                return;
+            }
+
+            if (targetWindow == IntPtr.Zero)
+            {
+                MessageBox.Show("No window selected");
                 return;
             }
 
@@ -151,24 +164,39 @@ namespace Tilr.Tray
 
         private void SetWindowToGridSelection()
         {
-            Debug.WriteLine(string.Format("Positioning window to coordinates {0},{1} to {2},{3}", _selectionMinX, _selectionMinY, _selectionMaxX, _selectionMaxY));
-            SetWindowSelection("Untitled - Notepad");
-
-            Debug.WriteLine(string.Format("screen bounds {0}", Screen.FromControl(this).Bounds));
-
             Rectangle screenBounds = Screen.FromControl(this).Bounds;
 
             int cellSizeX = (screenBounds.Width / _gridSizeX);
             int cellSizeY = (screenBounds.Height / _gridSizeY);
 
-            int posX = cellSizeX * _selectionMinX;
-            int posY = cellSizeY * _selectionMinY;
+            int posX, posY, posMaxX, posMaxY;
+            int width, height;
 
-            int posMaxX = cellSizeX * (_selectionMaxX + 1);
-            int posMaxY = cellSizeY * (_selectionMaxY + 1);
+            if (_selectionMinX <= _selectionMaxX)
+            {
+                posX = cellSizeX * _selectionMinX;
+                posMaxX = cellSizeX * (_selectionMaxX + 1);
+                width = posMaxX - posX;
+            }
+            else
+            {
+                posX = cellSizeX * _selectionMaxX;
+                posMaxX = cellSizeX * (_selectionMinX + 1);
+                width = posMaxX - posX;
+            }
 
-            int width = posMaxX - posX;
-            int height = posMaxY - posY;
+            if (_selectionMinY >= _selectionMaxY)
+            {
+                posY = cellSizeY * _selectionMaxY;
+                posMaxY = cellSizeY * (_selectionMinY + 1);
+                height = posMaxY - posY;
+            }
+            else
+            {
+                posY = cellSizeY * _selectionMinY;
+                posMaxY = cellSizeY * (_selectionMaxY + 1);
+                height = posMaxY - posY;
+            }
 
             ResizeWindow(width, height, posX, posY);
         }
@@ -188,16 +216,6 @@ namespace Tilr.Tray
             }
         }
 
-        private void TilrMainForm_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void trayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            openTilrForm();
-        }
-
         private void openTilrForm()
         {
             this.WindowState = FormWindowState.Normal;
@@ -207,6 +225,18 @@ namespace Tilr.Tray
                 this.ShowInTaskbar = true;
                 trayIcon.Visible = false;
                 trayContextMenu.Hide();
+            }
+        }
+
+        private void hideTilrForm()
+        {
+            this.WindowState = FormWindowState.Minimized;
+
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                this.ShowInTaskbar = false;
+                trayIcon.Visible = true;
+                trayContextMenu.Enabled = true;
             }
         }
 
@@ -292,6 +322,27 @@ namespace Tilr.Tray
             IgnoreResize = 0x0001,
             IgnoreZOrder = 0x0004,
             ShowWindow = 0x0040,
+        }
+
+
+        // Get active window on hotkey press
+        [DllImport("user32.dll")]
+        static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+
+        private string GetActiveWindowTitle()
+        {
+            const int nChars = 256;
+            StringBuilder Buff = new StringBuilder(nChars);
+            IntPtr handle = GetForegroundWindow();
+
+            if (GetWindowText(handle, Buff, nChars) > 0)
+            {
+                return Buff.ToString();
+            }
+            return null;
         }
     }
 }
