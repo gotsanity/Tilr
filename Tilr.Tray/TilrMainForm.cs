@@ -164,7 +164,7 @@ namespace Tilr.Tray
 
         private void SetWindowToGridSelection()
         {
-            Rectangle screenBounds = Screen.FromControl(this).Bounds;
+            Rectangle screenBounds = Screen.FromControl(this).WorkingArea;
 
             int cellSizeX = (screenBounds.Width / _gridSizeX);
             int cellSizeY = (screenBounds.Height / _gridSizeY);
@@ -215,16 +215,18 @@ namespace Tilr.Tray
                 trayContextMenu.Enabled = true;
             }
         }
-
+        
         private void openTilrForm()
         {
             this.WindowState = FormWindowState.Normal;
 
             if (this.WindowState == FormWindowState.Normal)
             {
+                this.CenterToScreen();
                 this.ShowInTaskbar = true;
                 trayIcon.Visible = false;
                 trayContextMenu.Hide();
+                this.Activate();
             }
         }
 
